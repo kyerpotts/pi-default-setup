@@ -1,0 +1,16 @@
+{
+  "name": "pi-default-setup",
+  "version": "0.1.0",
+  "description": "A pi package that appends default behavioral instructions to the system prompt.",
+  "type": "module",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./extensions"],
+    "skills": ["./skills"]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*",
+    "@sinclair/typebox": "*"
+  }
+}
