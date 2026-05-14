@@ -1,7 +1,7 @@
 import { access, mkdir, writeFile } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
-import { StringEnum } from "@mariozechner/pi-ai";
-import { withFileMutationQueue, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { StringEnum } from "@earendil-works/pi-ai";
+import { withFileMutationQueue, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 
 type CommandResult = {

@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getMarkdownTheme, parseFrontmatter, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { Container, Markdown, Spacer, Text } from "@mariozechner/pi-tui";
+import { getMarkdownTheme, parseFrontmatter, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { runSubagent } from "./lib/subagent-runner";
 import { parseJsonObject } from "./lib/subagent-output";
 
