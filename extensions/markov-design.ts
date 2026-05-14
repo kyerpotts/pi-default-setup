@@ -1,10 +1,10 @@
-import { spawn } from "node:child_process";
-import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Message } from "@mariozechner/pi-ai";
 import { getMarkdownTheme, parseFrontmatter, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@mariozechner/pi-tui";
+import { runSubagent } from "./lib/subagent-runner";
+import { parseJsonObject } from "./lib/subagent-output";
 
 const AGENTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "markov-design-agents");
 
@@ -93,53 +93,8 @@ interface AgentConfig {
   systemPrompt: string;
 }
 
-interface RunAgentResult {
-  exitCode: number;
-  messages: Message[];
-  stderr: string;
-  stopReason?: string;
-  errorMessage?: string;
-}
-
 function getModelRef(model: { provider: string; id: string } | undefined): string | undefined {
   return model ? `${model.provider}/${model.id}` : undefined;
-}
-
-function getPiInvocation(args: string[]): { command: string; args: string[] } {
-  const currentScript = process.argv[1];
-  const isBunVirtualScript = currentScript?.startsWith("/$bunfs/root/");
-  if (currentScript && !isBunVirtualScript && existsSync(currentScript)) {
-    return { command: process.execPath, args: [currentScript, ...args] };
-  }
-
-  const execName = basename(process.execPath).toLowerCase();
-  const isGenericRuntime = /^(node|bun)(\.exe)?$/.test(execName);
-  if (!isGenericRuntime) {
-    return { command: process.execPath, args };
-  }
-
-  return { command: "pi", args };
-}
-
-function getFinalOutput(messages: Message[]): string {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i];
-    if (message.role !== "assistant") continue;
-    for (const part of message.content) {
-      if (part.type === "text") return part.text;
-    }
-  }
-  return "";
-}
-
-function stripCodeFence(text: string): string {
-  const trimmed = text.trim();
-  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  return match ? match[1].trim() : trimmed;
-}
-
-function parseJsonObject(text: string): Record<string, unknown> {
-  return JSON.parse(stripCodeFence(text)) as Record<string, unknown>;
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -309,98 +264,18 @@ async function runAgent(
   cwd: string,
   signal?: AbortSignal,
   modelOverride?: string,
-): Promise<RunAgentResult> {
-  const args = [
-    "--mode",
-    "json",
-    "-p",
-    "--no-session",
-    "--no-tools",
-    "--no-extensions",
-    "--no-skills",
-    "--no-prompt-templates",
-    "--no-context-files",
-  ];
-
-  const selectedModel = modelOverride ?? agent.model;
-  if (selectedModel) args.push("--model", selectedModel);
-  if (agent.systemPrompt) args.push("--append-system-prompt", agent.systemPrompt);
-  args.push(JSON.stringify(payload, null, 2));
-
-  return await new Promise<RunAgentResult>((resolve) => {
-    const invocation = getPiInvocation(args);
-    const child = spawn(invocation.command, invocation.args, {
-      cwd,
-      shell: false,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-
-    const messages: Message[] = [];
-    let stderr = "";
-    let stopReason: string | undefined;
-    let errorMessage: string | undefined;
-    let buffer = "";
-
-    const processLine = (line: string) => {
-      if (!line.trim()) return;
-      try {
-        const event = JSON.parse(line) as Record<string, any>;
-        if (event.type === "message_end" && event.message) {
-          const message = event.message as Message;
-          messages.push(message);
-          if (message.role === "assistant") {
-            stopReason = message.stopReason;
-            errorMessage = message.errorMessage;
-          }
-        }
-      } catch {
-        // ignore malformed lines from subprocess output
-      }
-    };
-
-    child.stdout.on("data", (data) => {
-      buffer += data.toString();
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) processLine(line);
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      if (buffer.trim()) processLine(buffer);
-      resolve({
-        exitCode: code ?? 1,
-        messages,
-        stderr,
-        stopReason,
-        errorMessage,
-      });
-    });
-
-    child.on("error", (error) => {
-      resolve({
-        exitCode: 1,
-        messages,
-        stderr: error.message,
-        stopReason,
-        errorMessage,
-      });
-    });
-
-    if (signal) {
-      const kill = () => {
-        child.kill("SIGTERM");
-        setTimeout(() => {
-          if (!child.killed) child.kill("SIGKILL");
-        }, 3000);
-      };
-      if (signal.aborted) kill();
-      else signal.addEventListener("abort", kill, { once: true });
-    }
-  });
+) {
+  return await runSubagent(
+    {
+      id: agent.name,
+      prompt: JSON.stringify(payload, null, 2),
+      systemPrompt: agent.systemPrompt,
+      model: modelOverride ?? agent.model,
+      tools: "none",
+      expected: "text",
+    },
+    { cwd, signal },
+  );
 }
 
 function validateStageResult(value: Record<string, unknown>): StageResult {
@@ -571,12 +446,11 @@ async function runStage(
   if (!agent) throw new Error(`Missing bundled agent: ${agentName}`);
   ctx.ui.setStatus("markov-design", `Running ${agentName}...`);
   const result = await runAgent(agent, payload, ctx.cwd, ctx.signal, getModelRef(ctx.model));
-  const output = getFinalOutput(result.messages);
-  if (result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted") {
-    throw new Error(result.errorMessage || result.stderr || output || `${agentName} failed`);
+  if (!result.ok || result.stopReason === "error" || result.stopReason === "aborted") {
+    throw new Error(result.errorMessage || result.stderr || result.text || `${agentName} failed`);
   }
-  if (!output.trim()) throw new Error(`${agentName} returned no output`);
-  return parseJsonObject(output);
+  if (!result.text.trim()) throw new Error(`${agentName} returned no output`);
+  return parseJsonObject(result.text);
 }
 
 function nextNodeGoal(initialGoal: string, state: CanonicalState, userInputs: string[]): string {

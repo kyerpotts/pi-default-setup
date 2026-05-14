@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { Editor, type EditorTheme, Key, Text, matchesKey, truncateToWidth } from "@mariozechner/pi-tui";
+import { Editor, type EditorTheme, Key, Text, matchesKey, truncateToWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 
 interface QuestionOption {
@@ -260,6 +260,12 @@ export default function questionnaireExtension(pi: ExtensionAPI) {
             const question = currentQuestion();
             const options = currentOptions();
             const add = (text: string) => lines.push(truncateToWidth(text, width));
+            const addWrapped = (text: string, indent = "") => {
+              const wrapWidth = Math.max(1, width - indent.length);
+              for (const line of wrapTextWithAnsi(text, wrapWidth)) {
+                add(`${indent}${line}`);
+              }
+            };
 
             add(theme.fg("accent", "─".repeat(width)));
 
@@ -304,7 +310,7 @@ export default function questionnaireExtension(pi: ExtensionAPI) {
             }
 
             if (inputMode && question) {
-              add(theme.fg("text", ` ${question.prompt}`));
+              addWrapped(theme.fg("text", question.prompt), " ");
               lines.push("");
               renderOptions();
               lines.push("");
@@ -335,7 +341,7 @@ export default function questionnaireExtension(pi: ExtensionAPI) {
                 add(theme.fg("warning", ` Unanswered: ${missing}`));
               }
             } else if (question) {
-              add(theme.fg("text", ` ${question.prompt}`));
+              addWrapped(theme.fg("text", question.prompt), " ");
               lines.push("");
               renderOptions();
             }

@@ -5,8 +5,15 @@
   "type": "module",
   "keywords": ["pi-package"],
   "pi": {
-    "extensions": ["./extensions"],
-    "skills": ["./skills"]
+    "extensions": [
+      "./extensions/default-setup.ts",
+      "./extensions/markov-design.ts",
+      "./extensions/questionnaire.ts"
+    ],
+    "skills": [
+      "./skills/code-mentor",
+      "./skills/engineering-discipline"
+    ]
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*",

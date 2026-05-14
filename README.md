@@ -7,6 +7,7 @@ A small pi package that appends default behavioral instructions to pi's system p
 - `system-instructions.md` stores the behavioral instructions.
 - `extensions/default-setup.ts` registers `/default-setup` commands and listens to `before_agent_start`.
 - `extensions/questionnaire.ts` registers an interactive `questionnaire` tool for structured decisions and missing information.
+- `extensions/lib/subagent-runner.ts` provides the private pi subprocess runtime used by extension-owned multi-agent workflows.
 - On each turn, `default-setup.ts` appends the instructions to `event.systemPrompt` and returns the modified prompt.
 - The extension reads `system-instructions.md` from disk on each turn, so content changes apply without editing the extension code.
 
@@ -36,7 +37,6 @@ After installation, restart pi or run `/reload`.
 /default-setup path    # show the instructions file path
 /default-setup reload  # reload extensions, skills, prompts, and themes
 /markov-design <topic> # start the Markov Design workflow
-/evaluate-work         # launch the guided evaluation deck workflow
 ```
 
 `/default-setup edit` updates `system-instructions.md` directly. Because the extension reads that file on each turn, changes apply on the next prompt.
@@ -47,14 +47,12 @@ The package now bundles these skills:
 
 - `engineering-discipline` — default implementation discipline, adapted from `forrestchang/andrej-karpathy-skills` plus your OpenCode standards
 - `code-mentor` — senior engineer mentoring and review mode, adapted from your OpenCode `code-mentor` agent
-- `evaluation-workflow` — post-implementation evaluation flow for HTML decks, verification evidence, and screenshots/videos
 
 After reloading pi, they are available globally as:
 
 ```text
 /skill:engineering-discipline
 /skill:code-mentor
-/skill:evaluation-workflow
 ```
 
 ## Markov Design workflow
@@ -96,30 +94,6 @@ Bundled Markov agents:
 - add better auditing of user decisions, state transitions, and generated artifacts
 - extract Markov Design into its own discrete pi extension
 
-## Evaluation workflow
-
-The package now also starts a first evaluation workflow port.
-
-Use the skill:
-
-```text
-/skill:evaluation-workflow
-```
-
-You can launch it manually with:
-
-```text
-/evaluate-work
-```
-
-The workflow is backed by the `evaluation_deck` tool, which can:
-
-- generate an HTML deck of the completed work
-- include verification command results
-- include screenshots and videos
-- include git status and diff evidence when in a git repo
-- fail intentionally when verification or capture commands fail, so the agent can loop back into design/implementation and rerun evaluation
-
 ## Interactive questionnaire tool
 
 In interactive sessions, the package also registers a `questionnaire` tool that the model can call to ask one or more structured questions with selectable answers and a freeform fallback.
@@ -142,9 +116,13 @@ pi-default-setup/
   system-instructions.md
   extensions/
     default-setup.ts
-    evaluation-workflow.ts
+    evaluation-workflow.ts      # retained in repo, not exposed by package manifest
     markov-design.ts
     questionnaire.ts
+    lib/
+      pi-subprocess.ts
+      subagent-output.ts
+      subagent-runner.ts
     markov-design-agents/
       markov-adversary.md
       markov-clarifier.md
@@ -160,7 +138,7 @@ pi-default-setup/
     engineering-discipline/
       SKILL.md
     evaluation-workflow/
-      SKILL.md
+      SKILL.md                   # retained in repo, not exposed by package manifest
 ```
 
 ## TODO
@@ -169,13 +147,15 @@ pi-default-setup/
 - Consider a lightweight read-only mentor mode that discourages or blocks `edit`/`write` during review sessions.
 - Decide whether `engineering-discipline` should also have a condensed always-on version in `system-instructions.md`.
 - Add more portable, non-OpenCode-specific mentoring workflows if `code-mentor` grows beyond the current review pattern.
-- Improve the evaluation workflow with automatic screenshot/video discovery and capture conventions.
+- Improve the evaluation workflow with automatic screenshot/video discovery and capture conventions once it is ready to be re-exposed.
 - Add richer HTML deck layouts, artifact templates, and export targets.
 - extract the evaluation workflow into its own discrete pi extension
+- port interface-design and architecture exploration workflows onto the private subagent runner
 
 ## Notes
 
 - Edit `system-instructions.md` or use `/default-setup edit` to change the appended behavior.
 - Because this is a pi package, other users can install it from a local path, npm, or git.
 - The package name uses hyphens because package names cannot contain spaces.
+- Evaluation workflow prototype code is still in this repo, but the package manifest no longer exposes it to pi.
 - If you want repo-specific behavior later, add a separate `.pi/APPEND_SYSTEM.md` or project-local extension in that repo.
