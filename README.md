@@ -5,9 +5,8 @@ A small pi package that appends default behavioral instructions to pi's system p
 ## How it works
 
 - `system-instructions.md` stores the behavioral instructions.
-- `extensions/default-setup.ts` registers `/default-setup` commands and listens to `before_agent_start`.
-- On each turn, `default-setup.ts` appends the instructions to `event.systemPrompt` and returns the modified prompt.
-- The extension reads `system-instructions.md` from disk on each turn, so content changes apply without editing the extension code.
+- `extensions/default-setup.ts` listens to `before_agent_start`.
+- On each turn, the extension reads `system-instructions.md` and appends it to `event.systemPrompt`.
 
 This keeps the instructions versioned in git and makes them distributable as a pi package.
 
@@ -24,19 +23,6 @@ pi install git:github.com/kyerpotts/pi-default-setup
 ```
 
 After installation, restart pi or run `/reload`.
-
-## Commands
-
-```text
-/default-setup         # show command help and available subcommands
-/default-setup help    # show command help and available subcommands
-/default-setup show    # display the current appended instructions
-/default-setup edit    # open a multi-line editor and save changes
-/default-setup path    # show the instructions file path
-/default-setup reload  # reload extensions, skills, prompts, and themes
-```
-
-`/default-setup edit` updates `system-instructions.md` directly. Because the extension reads that file on each turn, changes apply on the next prompt.
 
 ## Bundled skills
 
@@ -95,7 +81,7 @@ pi-default-setup/
 
 ## Notes
 
-- Edit `system-instructions.md` or use `/default-setup edit` to change the appended behavior.
+- Edit the version-controlled `system-instructions.md` to change the appended behavior.
 - Because this is a pi package, other users can install it from a local path, npm, or git.
 - The package name uses hyphens because package names cannot contain spaces.
 - If you want repo-specific behavior later, add a separate `.pi/APPEND_SYSTEM.md` or project-local extension in that repo.
