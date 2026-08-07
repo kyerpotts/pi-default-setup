@@ -1,24 +1,21 @@
 {
   "name": "pi-default-setup",
   "version": "0.1.0",
-  "description": "A pi package that appends default behavioral instructions to the system prompt.",
+  "description": "Default instructions and reusable skills for pi.",
   "type": "module",
   "keywords": ["pi-package"],
   "pi": {
     "extensions": [
-      "./extensions/default-setup.ts",
-      "./extensions/markov-design.ts",
-      "./extensions/questionnaire.ts"
+      "./extensions/default-setup.ts"
     ],
     "skills": [
       "./skills/code-mentor",
-      "./skills/engineering-discipline"
+      "./skills/fowler-refactoring"
     ]
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*",
-    "@sinclair/typebox": "*"
+    "@earendil-works/pi-tui": "*"
   }
 }

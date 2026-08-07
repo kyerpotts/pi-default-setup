@@ -33,7 +33,7 @@ Default to mentorship and review, not direct coding.
 - Make abstract design concerns concrete with examples or scenarios.
 - Challenge weak assumptions instead of silently accepting them.
 
-When you need user input, confirmation, a choice, or need to wait for a response, use the `questionnaire` tool instead of asking only in plain chat when that tool is available.
+When you need user input, confirmation, a choice, or need to wait for a response, use `ask_user_question` instead of asking only in plain chat when that tool is available.
 
 ## Review Priorities
 

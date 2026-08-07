@@ -2,7 +2,7 @@ import { access, mkdir, writeFile } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { StringEnum } from "@earendil-works/pi-ai";
 import { withFileMutationQueue, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Type } from "@sinclair/typebox";
+import { Type } from "typebox";
 
 type CommandResult = {
   command: string;
@@ -590,9 +590,9 @@ export default function evaluationWorkflow(pi: ExtensionAPI) {
       "Generate an HTML evaluation deck with change summary, verification results, and screenshots/videos. Use after completing substantive work. If capture or verification commands fail, this tool writes the deck and then errors so the agent can fix issues and rerun.",
     promptSnippet: "Generate an evaluation HTML deck with verification results, git change summary, and screenshots/videos.",
     promptGuidelines: [
-      "Use this tool after you believe implementation is complete for a substantive task.",
-      "If UI or behavior changed, include screenshots or video evidence when possible.",
-      "If the tool reports failed verification or capture commands, fix the issue and rerun the evaluation instead of declaring success.",
+      "Use evaluation_deck after you believe implementation is complete for a substantive task.",
+      "When using evaluation_deck for UI or behavior changes, include screenshots or video evidence when possible.",
+      "If evaluation_deck reports failed verification or capture commands, fix the issue and rerun the evaluation instead of declaring success.",
     ],
     parameters: EvaluationDeckParams,
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
