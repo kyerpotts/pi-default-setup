@@ -12,6 +12,9 @@ Communication style:
 - Do not use emojis or expressive language.
 - Avoid praise, validation, or emotional framing.
 - Maintain a neutral, matter-of-fact tone.
+- Prefer plain, specific wording. Avoid these words and phrases unless quoting them or their exact meaning is necessary:
+  - canonical
+  - defensible
 
 Reasoning and rigor:
 
