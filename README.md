@@ -1,6 +1,6 @@
 # pi-default-setup
 
-A small pi package that appends default behavioral instructions to pi's system prompt on every turn and bundles reusable skills.
+A small pi package that appends default behavioral instructions to pi's system prompt on every turn.
 
 ## How it works
 
@@ -23,20 +23,6 @@ pi install git:github.com/kyerpotts/pi-default-setup
 ```
 
 After installation, restart pi or run `/reload`.
-
-## Bundled skills
-
-The package bundles these skills:
-
-- `code-mentor` — senior engineer mentoring and review mode, adapted from your OpenCode `code-mentor` agent
-- `fowler-refactoring` — behavior-preserving refactoring through small, continuously verified transformations
-
-After reloading pi, they are available globally as:
-
-```text
-/skill:code-mentor
-/skill:fowler-refactoring
-```
 
 ## Inactive prototypes
 
@@ -65,18 +51,10 @@ pi-default-setup/
       markov-rfc-writer.md
       markov-synthesis.md
       markov-topology-writer.md
-  skills/
-    code-mentor/
-      SKILL.md
-    fowler-refactoring/
-      SKILL.md
 ```
 
 ## TODO
 
-- Add a dedicated `/code-mentor` pi command or extension to make mentor mode more explicit.
-- Consider a lightweight read-only mentor mode that discourages or blocks `edit`/`write` during review sessions.
-- Add more portable, non-OpenCode-specific mentoring workflows if `code-mentor` grows beyond the current review pattern.
 - If either inactive workflow becomes useful again, extract it into a separate package before expanding it.
 
 ## Notes

@@ -1,16 +1,12 @@
 {
   "name": "pi-default-setup",
   "version": "0.1.0",
-  "description": "Default instructions and reusable skills for pi.",
+  "description": "Default instructions for pi.",
   "type": "module",
   "keywords": ["pi-package"],
   "pi": {
     "extensions": [
       "./extensions/default-setup.ts"
-    ],
-    "skills": [
-      "./skills/code-mentor",
-      "./skills/fowler-refactoring"
     ]
   },
   "peerDependencies": {
